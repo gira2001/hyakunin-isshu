@@ -38,39 +38,39 @@ export default function PoemDetailPage() {
       {poem.id > 1 && (
         <Link
           href={`/poem/${poem.id - 1}`}
-          className="fixed left-4 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 bg-white border-2 border-purple-200 rounded-2xl px-4 py-5 shadow-md hover:bg-purple-50 hover:border-purple-400 transition-colors text-purple-500 hover:text-purple-700"
+          className="fixed left-2 sm:left-4 top-1/2 -translate-y-1/2 flex flex-col items-center gap-0.5 sm:gap-1 bg-white border-2 border-purple-200 rounded-xl sm:rounded-2xl px-2 sm:px-4 py-3 sm:py-5 shadow-md hover:bg-purple-50 hover:border-purple-400 transition-colors text-purple-500 hover:text-purple-700"
         >
-          <span className="text-3xl font-light">‹</span>
+          <span className="text-xl sm:text-3xl font-light">‹</span>
           <span className="text-xs font-medium">{poem.id - 1}番</span>
         </Link>
       )}
       {poem.id < poems.length && (
         <Link
           href={`/poem/${poem.id + 1}`}
-          className="fixed right-4 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 bg-white border-2 border-purple-200 rounded-2xl px-4 py-5 shadow-md hover:bg-purple-50 hover:border-purple-400 transition-colors text-purple-500 hover:text-purple-700"
+          className="fixed right-2 sm:right-4 top-1/2 -translate-y-1/2 flex flex-col items-center gap-0.5 sm:gap-1 bg-white border-2 border-purple-200 rounded-xl sm:rounded-2xl px-2 sm:px-4 py-3 sm:py-5 shadow-md hover:bg-purple-50 hover:border-purple-400 transition-colors text-purple-500 hover:text-purple-700"
         >
-          <span className="text-3xl font-light">›</span>
+          <span className="text-xl sm:text-3xl font-light">›</span>
           <span className="text-xs font-medium">{poem.id + 1}番</span>
         </Link>
       )}
       <div className="bg-white rounded-2xl shadow-sm border border-purple-100 overflow-hidden">
-        <div className="flex">
+        <div className="flex flex-col sm:flex-row">
 
-          {/* 左：画像 */}
+          {/* 画像：モバイルは上・PCは左 */}
           {hasImage && (
-            <div className="w-1/2 flex-shrink-0">
+            <div className="w-full sm:w-1/2 sm:flex-shrink-0 h-56 sm:h-auto">
               <img
                 key={poem.id}
                 src={`/images/poems/poem-${poem.id}.jpg`}
                 alt={poem.kamiNoKu}
                 onError={() => setHasImage(false)}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover object-top"
               />
             </div>
           )}
 
-          {/* 右：内容 */}
-          <div className={`relative flex flex-col p-6 pb-16 space-y-4 ${hasImage ? "w-1/2" : "w-full"}`}>
+          {/* 内容：モバイルは下・PCは右 */}
+          <div className={`relative flex flex-col p-4 sm:p-6 pb-16 space-y-4 ${hasImage ? "w-full sm:w-1/2" : "w-full"}`}>
             <div className="space-y-4">
               <span className="text-xs font-mono text-purple-500 font-bold">#{poem.id}</span>
 
