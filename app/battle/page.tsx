@@ -424,6 +424,16 @@ export default function BattlePage() {
                       ))}
                     </div>
                   </div>
+                  {oppPlayer?.answeredIndex != null && oppPlayer.answeredIndex === i && i === round.correctIndex && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <span className="text-5xl font-bold text-emerald-400/40 drop-shadow">○</span>
+                    </div>
+                  )}
+                  {oppPlayer?.answeredIndex != null && oppPlayer.answeredIndex === i && i !== round.correctIndex && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <span className="text-5xl font-bold text-red-400/40 drop-shadow">✕</span>
+                    </div>
+                  )}
                   {myAnswer !== null && i === round.correctIndex && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <span className="text-5xl font-bold text-emerald-500 drop-shadow-md">○</span>
