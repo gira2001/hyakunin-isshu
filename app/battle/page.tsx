@@ -176,10 +176,42 @@ export default function BattlePage() {
     setMyRole("p2");
   }
 
+  function playSound(correct: boolean) {
+    const ctx = new AudioContext();
+    if (correct) {
+      [880, 1320].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        const t = ctx.currentTime + i * 0.18;
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(0.4, t + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+        osc.start(t);
+        osc.stop(t + 0.35);
+      });
+    } else {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "sawtooth";
+      osc.frequency.value = 120;
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.6);
+    }
+  }
+
   function handleAnswer(index: number) {
     if (!roomCode || !myRole || myAnswer !== null || !room) return;
     if (room.status !== "playing") return;
     setMyAnswer(index);
+    playSound(index === round.correctIndex);
     update(ref(db, `rooms/${roomCode}`), {
       [`${myRole}/answeredIndex`]: index,
       [`${myRole}/answeredAt`]: Date.now(),
@@ -324,12 +356,18 @@ export default function BattlePage() {
       {/* スコアバー */}
       <div className="flex-none flex items-center justify-between bg-green-800/60 rounded-xl px-4 py-2">
         <div className="text-left">
-          <p className="text-amber-100 font-bold text-sm">{room.p1.name}</p>
+          <div className="flex items-center gap-1.5">
+            <div className={`w-2 h-2 rounded-full ${p1Done ? "bg-emerald-400" : "bg-amber-300 animate-pulse"}`} />
+            <p className="text-amber-100 font-bold text-sm">{room.p1.name}</p>
+          </div>
           <p className="text-amber-200/70 text-xs">{room.p1.score}点</p>
         </div>
         <p className="text-amber-200/60 text-xs">{room.currentRound + 1} / {TOTAL_ROUNDS}問</p>
         <div className="text-right">
-          <p className="text-amber-100 font-bold text-sm">{room.p2?.name}</p>
+          <div className="flex items-center justify-end gap-1.5">
+            <p className="text-amber-100 font-bold text-sm">{room.p2?.name}</p>
+            <div className={`w-2 h-2 rounded-full ${p2Done ? "bg-emerald-400" : "bg-amber-300 animate-pulse"}`} />
+          </div>
           <p className="text-amber-200/70 text-xs">{room.p2?.score ?? 0}点</p>
         </div>
       </div>
@@ -352,16 +390,6 @@ export default function BattlePage() {
             — {poem.author}
           </p>
         </div>
-      </div>
-
-      {/* 状態テキスト */}
-      <div className="flex-none flex justify-between items-center px-1 h-5">
-        <span className="text-xs text-amber-200/70">
-          {myPlayer?.answeredIndex !== null && myPlayer?.answeredIndex !== undefined ? "✓ 回答済み" : "選択してください"}
-        </span>
-        <span className="text-xs text-amber-200/70">
-          {oppPlayer?.answeredIndex !== null && oppPlayer?.answeredIndex !== undefined ? "✓ 相手回答済み" : "相手は考え中..."}
-        </span>
       </div>
 
       {/* 下の句カード */}
