@@ -23,7 +23,7 @@ export default function PoemCard({ poem, progress, expanded = false, onClick }: 
         <span className="text-xs font-mono text-purple-500 font-bold">#{poem.id}</span>
       </div>
 
-      <p className="text-sm text-purple-800 font-medium leading-relaxed mb-1">{poem.kamiNoKu}</p>
+      <p className="text-sm text-purple-800 font-bold leading-relaxed mb-1">{poem.kamiNoKu}</p>
       <p className="text-sm text-purple-900 font-bold leading-relaxed mb-2">{poem.shimoNoKu}</p>
       <p className="text-xs text-stone-500 mb-2">— {poem.author}</p>
       <div className="text-right">
