@@ -239,7 +239,6 @@ export default function BattlePage() {
   }, [room?.p1?.answeredIndex, room?.p2?.answeredIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function createRoom() {
-    if (!myName.trim()) { setError("名前を入力してください"); return; }
     setError("");
     window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
     const code = generateCode();
@@ -256,7 +255,6 @@ export default function BattlePage() {
   }
 
   async function joinRoom() {
-    if (!myName.trim()) { setError("名前を入力してください"); return; }
     if (!inputCode.trim()) { setError("コードを入力してください"); return; }
     setError("");
     window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
@@ -345,7 +343,11 @@ export default function BattlePage() {
         {error && <p className="text-red-500 text-sm">{error}</p>}
         <button
           onClick={createRoom}
-          className="w-full bg-purple-700 text-white py-3 rounded-xl font-bold text-lg hover:bg-purple-600 transition-colors shadow"
+          className={`w-full py-3 rounded-xl font-bold text-lg transition-colors shadow ${
+            inputCode.trim()
+              ? "bg-white border-2 border-purple-400 text-purple-700 hover:bg-purple-50"
+              : "bg-purple-700 text-white hover:bg-purple-600"
+          }`}
         >
           ルームを作成
         </button>
@@ -364,7 +366,11 @@ export default function BattlePage() {
           />
           <button
             onClick={joinRoom}
-            className="w-full bg-white border-2 border-purple-400 text-purple-700 py-3 rounded-xl font-bold text-lg hover:bg-purple-50 transition-colors"
+            className={`w-full py-3 rounded-xl font-bold text-lg transition-colors ${
+              inputCode.trim()
+                ? "bg-purple-700 text-white hover:bg-purple-600 shadow"
+                : "bg-white border-2 border-purple-400 text-purple-700 hover:bg-purple-50"
+            }`}
           >
             参加する
           </button>
@@ -403,8 +409,8 @@ export default function BattlePage() {
   if (room.status === "finished") {
     const myScore = myRole === "p1" ? room.p1.score : room.p2?.score ?? 0;
     const oppScore = myRole === "p1" ? room.p2?.score ?? 0 : room.p1.score;
-    const myDisplayName = myRole === "p1" ? room.p1.name : room.p2?.name ?? "";
-    const oppDisplayName = myRole === "p1" ? room.p2?.name ?? "相手" : room.p1.name;
+    const myDisplayName = myRole === "p1" ? (room.p1.name || "あなた") : (room.p2?.name || "あなた");
+    const oppDisplayName = myRole === "p1" ? (room.p2?.name || "あいて") : (room.p1.name || "あいて");
     const won = myScore > oppScore;
     const draw = myScore === oppScore;
     return (
@@ -447,6 +453,8 @@ export default function BattlePage() {
   const myPlayer = myRole === "p1" ? room.p1 : room.p2;
   const oppPlayer = myRole === "p1" ? room.p2 : room.p1;
   const oppAnsweredCorrectly = oppPlayer?.answeredIndex != null && oppPlayer.answeredIndex === round.correctIndex;
+  const p1DisplayName = myRole === "p1" ? (room.p1.name || "あなた") : (room.p1.name || "あいて");
+  const p2DisplayName = myRole === "p2" ? (room.p2?.name || "あなた") : (room.p2?.name || "あいて");
 
   function torifudaClass(i: number): string {
     const base = "flex-1 min-h-0 max-w-[42vw] sm:max-w-36 relative transition-all group ";
@@ -463,14 +471,14 @@ export default function BattlePage() {
         <div className="text-left min-w-0">
           <div className="flex items-center gap-1.5">
             <div className={`w-2 h-2 shrink-0 rounded-full ${p1Done ? "bg-emerald-400" : "bg-amber-300 animate-pulse"}`} />
-            <p className="text-amber-100 font-bold text-xs sm:text-sm truncate max-w-[80px] sm:max-w-none">{room.p1.name}</p>
+            <p className="text-amber-100 font-bold text-xs sm:text-sm truncate max-w-[80px] sm:max-w-none">{p1DisplayName}</p>
           </div>
           <p className="text-amber-200/70 text-xs">{room.p1.score}点</p>
         </div>
         <p className="text-amber-200/60 text-xs shrink-0 px-2">{room.currentRound + 1} / {TOTAL_ROUNDS}問</p>
         <div className="text-right min-w-0">
           <div className="flex items-center justify-end gap-1.5">
-            <p className="text-amber-100 font-bold text-xs sm:text-sm truncate max-w-[80px] sm:max-w-none">{room.p2?.name}</p>
+            <p className="text-amber-100 font-bold text-xs sm:text-sm truncate max-w-[80px] sm:max-w-none">{p2DisplayName}</p>
             <div className={`w-2 h-2 shrink-0 rounded-full ${p2Done ? "bg-emerald-400" : "bg-amber-300 animate-pulse"}`} />
           </div>
           <p className="text-amber-200/70 text-xs">{room.p2?.score ?? 0}点</p>
