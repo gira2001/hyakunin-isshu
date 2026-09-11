@@ -449,7 +449,7 @@ export default function BattlePage() {
   const oppAnsweredCorrectly = oppPlayer?.answeredIndex != null && oppPlayer.answeredIndex === round.correctIndex;
 
   function torifudaClass(i: number): string {
-    const base = "flex-1 min-h-0 max-w-36 relative transition-all group ";
+    const base = "flex-1 min-h-0 max-w-[42vw] sm:max-w-36 relative transition-all group ";
     if (myAnswer === null) return base;
     if (i === round.correctIndex) return base + "ring-4 ring-emerald-500 rounded-sm";
     if (i === myAnswer && i !== round.correctIndex) return base + "ring-4 ring-red-500 rounded-sm opacity-80";
@@ -460,18 +460,18 @@ export default function BattlePage() {
     <div className="-mx-4 -mt-4 -mb-4 h-[calc(100%+2rem)] overflow-hidden flex flex-col gap-2 px-4 pt-2 pb-2">
       {/* スコアバー */}
       <div className="flex-none flex items-center justify-between bg-green-800/60 rounded-xl px-4 py-2">
-        <div className="text-left">
+        <div className="text-left min-w-0">
           <div className="flex items-center gap-1.5">
-            <div className={`w-2 h-2 rounded-full ${p1Done ? "bg-emerald-400" : "bg-amber-300 animate-pulse"}`} />
-            <p className="text-amber-100 font-bold text-sm">{room.p1.name}</p>
+            <div className={`w-2 h-2 shrink-0 rounded-full ${p1Done ? "bg-emerald-400" : "bg-amber-300 animate-pulse"}`} />
+            <p className="text-amber-100 font-bold text-xs sm:text-sm truncate max-w-[80px] sm:max-w-none">{room.p1.name}</p>
           </div>
           <p className="text-amber-200/70 text-xs">{room.p1.score}点</p>
         </div>
-        <p className="text-amber-200/60 text-xs">{room.currentRound + 1} / {TOTAL_ROUNDS}問</p>
-        <div className="text-right">
+        <p className="text-amber-200/60 text-xs shrink-0 px-2">{room.currentRound + 1} / {TOTAL_ROUNDS}問</p>
+        <div className="text-right min-w-0">
           <div className="flex items-center justify-end gap-1.5">
-            <p className="text-amber-100 font-bold text-sm">{room.p2?.name}</p>
-            <div className={`w-2 h-2 rounded-full ${p2Done ? "bg-emerald-400" : "bg-amber-300 animate-pulse"}`} />
+            <p className="text-amber-100 font-bold text-xs sm:text-sm truncate max-w-[80px] sm:max-w-none">{room.p2?.name}</p>
+            <div className={`w-2 h-2 shrink-0 rounded-full ${p2Done ? "bg-emerald-400" : "bg-amber-300 animate-pulse"}`} />
           </div>
           <p className="text-amber-200/70 text-xs">{room.p2?.score ?? 0}点</p>
         </div>
@@ -479,7 +479,7 @@ export default function BattlePage() {
 
       {/* 上の句カード */}
       <div className="flex-[2] min-h-0 flex justify-center">
-        <div className="h-full bg-white border-4 border-green-700 flex flex-col items-center justify-center gap-2 px-6 pt-4 pb-2 overflow-hidden">
+        <div className="h-full bg-white border-4 border-green-700 flex flex-col items-center justify-center gap-2 px-3 sm:px-6 pt-2 sm:pt-4 pb-2 overflow-hidden">
           <div className="flex flex-row-reverse gap-3">
             {displayPhrases.map((phrase, pi) => {
               const offset = displayPhrases.slice(0, pi).reduce((s, p) => s + p.length, 0);
@@ -505,9 +505,9 @@ export default function BattlePage() {
       </div>
 
       {/* 下の句カード */}
-      <div className="flex-[3] min-h-0 flex flex-col gap-6">
+      <div className="flex-[3] min-h-0 flex flex-col gap-2 sm:gap-6">
         {[[0, 1], [2, 3]].map((row, rowIdx) => (
-          <div key={rowIdx} className="flex-1 min-h-0 flex gap-6 justify-center">
+          <div key={rowIdx} className="flex-1 min-h-0 flex gap-2 sm:gap-6 justify-center">
             {row.map((i) => {
               const optPoem = poems.find((p) => p.id === round.optionIds[i])!;
               const r = optPoem.reading.split(/\s+/).slice(3).join("");
@@ -538,22 +538,22 @@ export default function BattlePage() {
                   </div>
                   {oppPlayer?.answeredIndex != null && oppPlayer.answeredIndex === i && i === round.correctIndex && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <span className="text-5xl font-bold text-emerald-400/40 drop-shadow">○</span>
+                      <span className="text-3xl sm:text-5xl font-bold text-emerald-400/40 drop-shadow">○</span>
                     </div>
                   )}
                   {oppPlayer?.answeredIndex != null && oppPlayer.answeredIndex === i && i !== round.correctIndex && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <span className="text-5xl font-bold text-red-400/40 drop-shadow">✕</span>
+                      <span className="text-3xl sm:text-5xl font-bold text-red-400/40 drop-shadow">✕</span>
                     </div>
                   )}
                   {myAnswer !== null && i === round.correctIndex && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <span className="text-5xl font-bold text-emerald-500 drop-shadow-md">○</span>
+                      <span className="text-3xl sm:text-5xl font-bold text-emerald-500 drop-shadow-md">○</span>
                     </div>
                   )}
                   {myAnswer !== null && i === myAnswer && i !== round.correctIndex && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <span className="text-5xl font-bold text-red-500 drop-shadow-md">✕</span>
+                      <span className="text-3xl sm:text-5xl font-bold text-red-500 drop-shadow-md">✕</span>
                     </div>
                   )}
                 </button>
