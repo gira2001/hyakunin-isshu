@@ -18,18 +18,18 @@ export default function Navigation() {
   return (
     <nav className="bg-purple-900 text-white shadow-md">
       <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-        <Link href="/" className="text-xl font-bold tracking-widest text-amber-300">
+        <Link href="/" className="text-base sm:text-xl font-bold tracking-widest text-amber-300 shrink-0">
           百人一首
         </Link>
 
-        <ul className="flex gap-1">
+        <ul className="flex gap-0.5 sm:gap-1 overflow-x-auto">
           {links.map(({ href, label }) => {
             const active = pathname === href;
             return (
-              <li key={href}>
+              <li key={href} className="shrink-0">
                 <Link
                   href={href}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`px-2 py-1 sm:px-4 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
                     active
                       ? "bg-purple-700 text-amber-300"
                       : "text-purple-200 hover:bg-purple-700 hover:text-white"
