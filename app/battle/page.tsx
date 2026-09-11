@@ -164,17 +164,31 @@ export default function BattlePage() {
       u.lang = "ja-JP";
       u.rate = 0.65;
       if (voice) u.voice = voice;
-      u.onstart = () => revealPhrase(idx);
-      u.onend = () => {
+
+      let revealed = false;
+      function doReveal() {
+        if (revealed) return;
+        revealed = true;
+        revealPhrase(idx);
+      }
+      u.onstart = doReveal;
+      timers.push(setTimeout(doReveal, 400)); // iOS fallback
+
+      let advanced = false;
+      function doAdvance() {
+        if (advanced) return;
+        advanced = true;
         if (idx < readingPhrases.length - 1) {
           timers.push(setTimeout(() => speakChain(idx + 1), 750));
         } else {
           timers.push(setTimeout(() => {
-            revealedRef.current = total;
-            setRevealedCount(total);
+            if (!selectedRef.current) { revealedRef.current = total; setRevealedCount(total); }
           }, 90 * (displayPhrases[idx]?.length ?? 0)));
         }
-      };
+      }
+      u.onend = doAdvance;
+      timers.push(setTimeout(doAdvance, readingPhrases[idx].length * 350 + 1500)); // iOS fallback
+
       window.speechSynthesis.speak(u);
     }
 
@@ -227,6 +241,7 @@ export default function BattlePage() {
   async function createRoom() {
     if (!myName.trim()) { setError("名前を入力してください"); return; }
     setError("");
+    window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
     const code = generateCode();
     await set(ref(db, `rooms/${code}`), {
       status: "waiting",
@@ -244,6 +259,7 @@ export default function BattlePage() {
     if (!myName.trim()) { setError("名前を入力してください"); return; }
     if (!inputCode.trim()) { setError("コードを入力してください"); return; }
     setError("");
+    window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
     const code = inputCode.trim().toUpperCase();
     const snap = await get(ref(db, `rooms/${code}`));
     if (!snap.exists()) { setError("ルームが見つかりません"); return; }
