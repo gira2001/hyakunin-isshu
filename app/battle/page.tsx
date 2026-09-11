@@ -30,6 +30,20 @@ interface RoomData {
   createdAt: number;
 }
 
+function toModernPronunciation(kana: string): string {
+  return kana
+    .replace(/てふ/g, "ちょう")
+    .replace(/ゐ/g, "い")
+    .replace(/ゑ/g, "え")
+    .replace(/ぢ/g, "じ")
+    .replace(/づ/g, "ず")
+    .replace(/([ぁ-ゖ])ひ/g, "$1い")
+    .replace(/([ぁ-ゖ])ふ(?![ぁ-ゖ])/g, "$1う")
+    .replace(/([ぁ-ゖ])へ/g, "$1え")
+    .replace(/([ぁ-ゖ])ほ/g, "$1お")
+    .replace(/([ぁ-ゖ])は/g, "$1わ");
+}
+
 function generateCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
@@ -61,7 +75,19 @@ export default function BattlePage() {
   const [showResult, setShowResult] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [voice, setVoice] = useState<SpeechSynthesisVoice | null>(null);
   const advancedRef = useRef(false);
+
+  useEffect(() => {
+    function loadVoices() {
+      const voices = window.speechSynthesis.getVoices();
+      const ja = voices.find((v) => v.lang.startsWith("ja"));
+      if (ja) setVoice(ja);
+    }
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    return () => { window.speechSynthesis.onvoiceschanged = null; };
+  }, []);
 
   // URLパラメータからコードを読み込む
   useEffect(() => {
@@ -91,30 +117,53 @@ export default function BattlePage() {
     });
   }, [roomCode]);
 
-  // ラウンド変更時にリセット
+  // ラウンド変更時にリセット＆音読開始
   useEffect(() => {
     setMyAnswer(null);
     setShowResult(false);
     advancedRef.current = false;
   }, [room?.currentRound]);
 
-  // 両者回答済み → 結果表示 → p1がゲームを進める
+  // 音読
+  useEffect(() => {
+    if (!room || room.status !== "playing") return;
+    const curRound = room.rounds[room.currentRound];
+    if (!curRound) return;
+    const poemData = poems.find((p) => p.id === curRound.poemId);
+    if (!poemData) return;
+    const phrases = poemData.reading.split(/\s+/).slice(0, 3).map(toModernPronunciation);
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    window.speechSynthesis.cancel();
+    function speakChain(idx: number) {
+      if (idx >= phrases.length) return;
+      const u = new SpeechSynthesisUtterance(phrases[idx]);
+      u.lang = "ja-JP";
+      u.rate = 0.65;
+      if (voice) u.voice = voice;
+      u.onend = () => { timers.push(setTimeout(() => speakChain(idx + 1), 750)); };
+      window.speechSynthesis.speak(u);
+    }
+    speakChain(0);
+    return () => { window.speechSynthesis.cancel(); timers.forEach(clearTimeout); };
+  }, [room?.currentRound, room?.status, voice]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 誰かが正解したら（または両者回答済みなら）p1がゲームを進める
   useEffect(() => {
     if (!room || !roomCode || room.status !== "playing") return;
-    const p1Done = room.p1?.answeredIndex !== null && room.p1?.answeredIndex !== undefined;
-    const p2Done = room.p2?.answeredIndex !== null && room.p2?.answeredIndex !== undefined;
-    if (!p1Done || !p2Done || advancedRef.current) return;
+    const curRound = room.rounds[room.currentRound];
+    if (!curRound) return;
+    const p1Answered = room.p1?.answeredIndex != null;
+    const p2Answered = room.p2?.answeredIndex != null;
+    const p1Correct = p1Answered && room.p1.answeredIndex === curRound.correctIndex;
+    const p2Correct = p2Answered && room.p2?.answeredIndex === curRound.correctIndex;
+    const shouldAdvance = p1Correct || p2Correct || (p1Answered && p2Answered);
+    if (!shouldAdvance || advancedRef.current) return;
 
-    setShowResult(true);
     if (myRole !== "p1") return;
     advancedRef.current = true;
 
-    const round = room.rounds[room.currentRound];
-    const p1Correct = room.p1.answeredIndex === round.correctIndex;
-    const p2Correct = room.p2!.answeredIndex === round.correctIndex;
     let p1Score = room.p1.score;
     let p2Score = room.p2!.score;
-
     if (p1Correct && p2Correct) {
       if (room.p1.answeredAt! < room.p2!.answeredAt!) p1Score++;
       else p2Score++;
@@ -136,7 +185,7 @@ export default function BattlePage() {
         currentRound: nextRound,
         status: nextRound >= TOTAL_ROUNDS ? "finished" : "playing",
       });
-    }, 2500);
+    }, 2000);
   }, [room?.p1?.answeredIndex, room?.p2?.answeredIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function createRoom() {
@@ -210,6 +259,7 @@ export default function BattlePage() {
   function handleAnswer(index: number) {
     if (!roomCode || !myRole || myAnswer !== null || !room) return;
     if (room.status !== "playing") return;
+    window.speechSynthesis.cancel();
     setMyAnswer(index);
     playSound(index === round.correctIndex);
     update(ref(db, `rooms/${roomCode}`), {
@@ -338,10 +388,11 @@ export default function BattlePage() {
   const round = room.rounds[room.currentRound];
   const poem = poems.find((p) => p.id === round.poemId)!;
   const displayPhrases = poem.kamiNoKu.split(/\s+/).filter(Boolean);
-  const p1Done = room.p1?.answeredIndex !== null && room.p1?.answeredIndex !== undefined;
-  const p2Done = room.p2?.answeredIndex !== null && room.p2?.answeredIndex !== undefined;
+  const p1Done = room.p1?.answeredIndex != null;
+  const p2Done = room.p2?.answeredIndex != null;
   const myPlayer = myRole === "p1" ? room.p1 : room.p2;
   const oppPlayer = myRole === "p1" ? room.p2 : room.p1;
+  const oppAnsweredCorrectly = oppPlayer?.answeredIndex != null && oppPlayer.answeredIndex === round.correctIndex;
 
   function torifudaClass(i: number): string {
     const base = "flex-1 min-h-0 max-w-36 relative transition-all group ";
@@ -405,7 +456,7 @@ export default function BattlePage() {
                 <button
                   key={i}
                   onClick={() => handleAnswer(i)}
-                  disabled={myAnswer !== null}
+                  disabled={myAnswer !== null || oppAnsweredCorrectly}
                   className={torifudaClass(i)}
                 >
                   <div
