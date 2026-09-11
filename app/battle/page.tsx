@@ -313,10 +313,7 @@ export default function BattlePage() {
 
   function torifudaClass(i: number): string {
     const base = "flex-1 min-h-0 max-w-36 relative transition-all group ";
-    if (!showResult) {
-      if (myAnswer === i) return base + "ring-4 ring-purple-400 rounded-sm";
-      return base;
-    }
+    if (myAnswer === null) return base;
     if (i === round.correctIndex) return base + "ring-4 ring-emerald-500 rounded-sm";
     if (i === myAnswer && i !== round.correctIndex) return base + "ring-4 ring-red-500 rounded-sm opacity-80";
     return base + "opacity-30";
@@ -399,12 +396,12 @@ export default function BattlePage() {
                       ))}
                     </div>
                   </div>
-                  {showResult && i === round.correctIndex && (
+                  {myAnswer !== null && i === round.correctIndex && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <span className="text-5xl font-bold text-emerald-500 drop-shadow-md">○</span>
                     </div>
                   )}
-                  {showResult && i === myAnswer && i !== round.correctIndex && (
+                  {myAnswer !== null && i === myAnswer && i !== round.correctIndex && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <span className="text-5xl font-bold text-red-500 drop-shadow-md">✕</span>
                     </div>
