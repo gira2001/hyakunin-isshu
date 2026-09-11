@@ -73,10 +73,14 @@ export default function BattlePage() {
   const [room, setRoom] = useState<RoomData | null>(null);
   const [myAnswer, setMyAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
+  const [revealedCount, setRevealedCount] = useState(0);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [voice, setVoice] = useState<SpeechSynthesisVoice | null>(null);
   const advancedRef = useRef(false);
+  const revealedRef = useRef(0);
+  const selectedRef = useRef(false);
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
     function loadVoices() {
@@ -117,34 +121,66 @@ export default function BattlePage() {
     });
   }, [roomCode]);
 
-  // ラウンド変更時にリセット＆音読開始
+  // ラウンド変更時にリセット
   useEffect(() => {
     setMyAnswer(null);
     setShowResult(false);
+    setRevealedCount(0);
+    revealedRef.current = 0;
+    selectedRef.current = false;
     advancedRef.current = false;
   }, [room?.currentRound]);
 
-  // 音読
+  // 音読＋文字逐次表示
   useEffect(() => {
     if (!room || room.status !== "playing") return;
     const curRound = room.rounds[room.currentRound];
     if (!curRound) return;
     const poemData = poems.find((p) => p.id === curRound.poemId);
     if (!poemData) return;
-    const phrases = poemData.reading.split(/\s+/).slice(0, 3).map(toModernPronunciation);
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    window.speechSynthesis.cancel();
+    const displayPhrases = poemData.kamiNoKu.split(/\s+/).filter(Boolean);
+    const readingPhrases = poemData.reading.split(/\s+/).slice(0, 3).map(toModernPronunciation);
+    const total = displayPhrases.reduce((s, p) => s + p.length, 0);
+    const timers = timersRef.current;
+
+    function clearAll() { timers.forEach(clearTimeout); timers.length = 0; }
+
+    function revealPhrase(phraseIdx: number) {
+      if (selectedRef.current || phraseIdx >= displayPhrases.length) return;
+      const offset = displayPhrases.slice(0, phraseIdx).reduce((s, p) => s + p.length, 0);
+      displayPhrases[phraseIdx].split("").forEach((_, i) => {
+        timers.push(setTimeout(() => {
+          if (selectedRef.current) return;
+          const next = offset + i + 1;
+          revealedRef.current = Math.max(revealedRef.current, next);
+          setRevealedCount((prev) => Math.max(prev, next));
+        }, i * 90));
+      });
+    }
+
     function speakChain(idx: number) {
-      if (idx >= phrases.length) return;
-      const u = new SpeechSynthesisUtterance(phrases[idx]);
+      if (selectedRef.current || idx >= readingPhrases.length) return;
+      const u = new SpeechSynthesisUtterance(readingPhrases[idx]);
       u.lang = "ja-JP";
       u.rate = 0.65;
       if (voice) u.voice = voice;
-      u.onend = () => { timers.push(setTimeout(() => speakChain(idx + 1), 750)); };
+      u.onstart = () => revealPhrase(idx);
+      u.onend = () => {
+        if (idx < readingPhrases.length - 1) {
+          timers.push(setTimeout(() => speakChain(idx + 1), 750));
+        } else {
+          timers.push(setTimeout(() => {
+            revealedRef.current = total;
+            setRevealedCount(total);
+          }, 90 * (displayPhrases[idx]?.length ?? 0)));
+        }
+      };
       window.speechSynthesis.speak(u);
     }
+
+    window.speechSynthesis.cancel();
     speakChain(0);
-    return () => { window.speechSynthesis.cancel(); timers.forEach(clearTimeout); };
+    return () => { window.speechSynthesis.cancel(); clearAll(); };
   }, [room?.currentRound, room?.status, voice]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 誰かが正解したら（または両者回答済みなら）p1がゲームを進める
@@ -259,7 +295,9 @@ export default function BattlePage() {
   function handleAnswer(index: number) {
     if (!roomCode || !myRole || myAnswer !== null || !room) return;
     if (room.status !== "playing") return;
+    selectedRef.current = true;
     window.speechSynthesis.cancel();
+    timersRef.current.forEach(clearTimeout);
     setMyAnswer(index);
     playSound(index === round.correctIndex);
     update(ref(db, `rooms/${roomCode}`), {
@@ -427,15 +465,22 @@ export default function BattlePage() {
       <div className="flex-[2] min-h-0 flex justify-center">
         <div className="h-full bg-white border-4 border-green-700 flex flex-col items-center justify-center gap-2 px-6 pt-4 pb-2 overflow-hidden">
           <div className="flex flex-row-reverse gap-3">
-            {displayPhrases.map((phrase, pi) => (
-              <div
-                key={pi}
-                style={{ writingMode: "vertical-rl", fontSize: "clamp(1rem, 4dvh, 2.8rem)", lineHeight: 1 }}
-                className="text-stone-900 tracking-widest"
-              >
-                {phrase}
-              </div>
-            ))}
+            {displayPhrases.map((phrase, pi) => {
+              const offset = displayPhrases.slice(0, pi).reduce((s, p) => s + p.length, 0);
+              return (
+                <div
+                  key={pi}
+                  style={{ writingMode: "vertical-rl", fontSize: "clamp(1rem, 4dvh, 2.8rem)", lineHeight: 1 }}
+                  className="text-stone-900 tracking-widest"
+                >
+                  {phrase.split("").map((char, ci) => (
+                    <span key={ci} className={`transition-opacity duration-100 ${offset + ci < revealedCount ? "opacity-100" : "opacity-0"}`}>
+                      {char}
+                    </span>
+                  ))}
+                </div>
+              );
+            })}
           </div>
           <p style={{ fontSize: "clamp(0.65rem, 1.5dvh, 1rem)" }} className="text-stone-500 tracking-wide">
             — {poem.author}
