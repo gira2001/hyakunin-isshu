@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 環境構築　　
+## Javaのインストール　　
+### Javaのバージョン確認　　
 
-## Getting Started
+Javaのバージョンを確認コマンド（23やと動くはず。他はわからん）
 
-First, run the development server:
+```sh
+java -version
+```
+## postgresのインストール　　
+### postgresをmacにインストール　　
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+macOSにPostgreSQLをインストールするには、Homebrewを使用します。(macのターミナルで実行)
+→俺は権限系でエラーなったからchatgptに聞いて権限変えた。（フォルダを書き換える権利がない的な。）
+
+```sh
+brew install postgresql
+brew services start postgresql
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### postgresにデータベースを作成　　
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```sh
+psql -U postgres
+CREATE DATABASE mydatabase;
+CREATE USER myuser WITH PASSWORD 'mypassword';
+ALTER ROLE myuser SET client_encoding TO 'utf8';
+GRANT ALL PRIVILEGES ON DATABASE mydatabase TO myuser;
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+psql -U postgresができない場合は以下記事を参照
+https://lifehack.world/postgresql-fatal-role-postgres-does-not-exist/
 
-## Learn More
+### postgreへのログインコマンド　　
 
-To learn more about Next.js, take a look at the following resources:
+myuserがmydatabaseにアクセスする。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+具体的な動き：postgresの中に、mydatabase（データベース）を作成してmyuser（ユーザー名）でログインする。
+→好きなユーザー名にしても良いけどその場合はソースコードのapplication.propertiesの値も変えなあかん。
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```sh
+psql -U myuser -d mydatabase
+```
 
-## Deploy on Vercel
+### テキトーなデータの登録（何でも良い）　　
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+以下のSQLコマンドを実行して、`users`テーブルにデータを挿入。
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```sql
+INSERT INTO users (email, username) VALUES ('john.doe@example.com', 'johndoe');
+INSERT INTO users (email, username) VALUES ('jane.smith@example.com', 'janesmith');
+INSERT INTO users (email, username) VALUES ('bob.jones@example.com', 'bobjones');
+```
+## アプリケーションを動かしてみる　　
+
+1. `spring-thymeleaf-app/src/main/java/com/example/spring_thymeleaf_app/SpringThymeleafAppApplication.java`のmainメソッドを実行
+2. 実行後、テキトーなブラウザでhttp://localhost:8080/usersを入力
+3. usersテーブルの値がブラウザに表示されたら動作確認クリアー👍

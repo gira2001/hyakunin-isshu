@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Results</title>
+    <style>
+        .large-photo {
+            width: 800px;
+            height: auto; /* アスペクト比を維持 */
+        }
+        .center-content {
+            text-align: center;
+        }
+        .center-content img {
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="center-content">今日の飯ここで良くね？</h1>
+    <form action="/search" method="get" class="center-content">
+        <label for="station">場所を入力してください:</label>
+        <input type="text" id="station" name="station" placeholder="例: 東京駅">
+        <button type="submit">検索</button>
+    </form>
+    <div th:if="${stations != null}" class="center-content">
+        <form action="/search" method="get">
+            <label for="selectedStation">場所を選択してください:</label>
+            <select id="selectedStation" name="location">
+                <option th:each="station : ${stations}" th:value="${station.lat + ',' + station.lng}" th:text="${station.name}"></option>
+            </select>
+            <button type="submit">検索</button>
+        </form>
+    </div>
+    <div th:if="${result != null}" class="center-content">
+        <img th:src="${result.photoUrl}" alt="Photo" class="large-photo" />
+        <span th:text="${result.name}"></span><br>
+        <span th:text="${result.address}"></span><br>
+        <span>評価: <span th:text="${result.rating}"></span></span><br> <!-- 評価を表示 -->
+        <a th:href="${result.mapUrl}" target="_blank">Google Mapsで見る</a> <!-- Google Mapsのリンクを追加 -->
+    </div>
+    <div th:if="${result == null}">
+        <p>No results found.</p>
+    </div>
+</body>
+</html>
