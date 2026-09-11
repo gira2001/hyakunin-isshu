@@ -524,7 +524,7 @@ export default function BattlePage() {
                     className="w-full h-full bg-white border-4 border-green-700 transition-colors group-hover:bg-green-50"
                     style={{ containerType: "size" }}
                   >
-                    <div className="w-full flex flex-row-reverse h-full items-start justify-center pt-2">
+                    <div className="w-full flex flex-row-reverse h-full items-start justify-center pt-3">
                       {cols.map((col, ci) => (
                         <div
                           key={ci}
