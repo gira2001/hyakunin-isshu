@@ -4,6 +4,8 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center justify-center h-full gap-8">
       <h1 className="text-5xl font-bold text-purple-900 tracking-widest">百人一首</h1>
+      <p className="text-stone-500 text-base">小倉山荘</p>
+      <p className="text-stone-600 text-sm">クイズ形式で百人一首を楽しく学ぼう</p>
       <div className="flex flex-col sm:flex-row gap-4 w-full max-w-sm sm:max-w-none sm:justify-center">
         <Link
           href="/hyakunin"
