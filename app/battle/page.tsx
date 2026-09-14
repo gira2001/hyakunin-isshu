@@ -67,17 +67,18 @@ function generateRounds(): RoundData[] {
 }
 
 function SeijiChar({ strokes, className = "" }: { strokes: number; className?: string }) {
+  // viewBox 20×22 に対して strokeWidth=2 → 表示サイズに対して適切な太さになる
   const paths = [
-    "M2,6 H48",    // 1: 上の横棒（全幅）
-    "M15,6 V48",   // 2: 縦棒（左寄り・上から下まで）
-    "M15,20 H33",  // 3: 上の短い横棒（縦棒から右へ）
-    "M15,34 H46",  // 4: 中の横棒（縦棒から右へ）
-    "M15,48 H46",  // 5: 下の横棒（縦棒の末端から右へ）
+    "M1,3 H19",   // 1: 上の横棒（全幅）
+    "M6,3 V19",   // 2: 縦棒（x=6、左から30%の位置、上から下まで）
+    "M6,8 H13",   // 3: 上の短い横棒（縦棒から右へ・短め）
+    "M6,13 H19",  // 4: 中の横棒（縦棒から右へ）
+    "M6,19 H19",  // 5: 下の横棒（縦棒の末端から右へ）
   ];
   return (
-    <svg viewBox="0 0 50 54" className={`inline-block ${className}`}>
+    <svg viewBox="0 0 20 22" className={`inline-block ${className}`}>
       {paths.slice(0, strokes).map((d, i) => (
-        <path key={i} d={d} stroke="currentColor" strokeWidth="3" strokeLinecap="round" fill="none" />
+        <path key={i} d={d} stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
       ))}
     </svg>
   );
@@ -453,13 +454,13 @@ export default function BattlePage() {
           <div className="flex justify-around items-center">
             <div className="flex flex-col items-center gap-1">
               <p className="text-stone-500 text-sm">{myDisplayName}</p>
-              <div className="text-purple-700"><SeijiTally score={myScore} charClass="w-8 h-11" /></div>
+              <div className="text-purple-700"><SeijiTally score={myScore} charClass="w-10 h-12" /></div>
               <p className="text-lg font-bold text-purple-700">{myScore}点</p>
             </div>
             <p className="text-stone-300 text-2xl">vs</p>
             <div className="flex flex-col items-center gap-1">
               <p className="text-stone-500 text-sm">{oppDisplayName}</p>
-              <div className="text-stone-400"><SeijiTally score={oppScore} charClass="w-8 h-11" /></div>
+              <div className="text-stone-400"><SeijiTally score={oppScore} charClass="w-10 h-12" /></div>
               <p className="text-lg font-bold text-stone-500">{oppScore}点</p>
             </div>
           </div>
