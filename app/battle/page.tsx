@@ -67,34 +67,17 @@ function generateRounds(): RoundData[] {
 }
 
 function SeijiChar({ strokes, className = "" }: { strokes: number; className?: string }) {
-  // 毛筆風: 中央が太く両端が細い filled polygon で各画を表現
-  function brush(x1: number, y1: number, x2: number, y2: number,
-                 sw: number, mw: number, ew: number): string {
-    const mx = (x1+x2)/2, my = (y1+y2)/2;
-    const dx = x2-x1, dy = y2-y1;
-    const len = Math.sqrt(dx*dx+dy*dy) || 1;
-    const nx = -dy/len, ny = dx/len;
-    return [
-      `M${x1+nx*(sw/2)},${y1+ny*(sw/2)}`,
-      `Q${mx+nx*(mw/2)},${my+ny*(mw/2)} ${x2+nx*(ew/2)},${y2+ny*(ew/2)}`,
-      `L${x2-nx*(ew/2)},${y2-ny*(ew/2)}`,
-      `Q${mx-nx*(mw/2)},${my-ny*(mw/2)} ${x1-nx*(sw/2)},${y1-ny*(sw/2)}`,
-      "Z",
-    ].join(" ");
-  }
-
   const paths = [
-    brush(5, 22, 95, 22, 4, 8, 2),      // 1: 上の横棒（全幅）
-    brush(28, 22, 28, 120, 3, 7, 3),    // 2: 縦棒（左寄り、下まで）
-    brush(28, 50, 62, 50, 3, 6, 2),     // 3: 上の短い横棒（縦棒から右へ）
-    brush(28, 78, 90, 78, 3, 7, 2),     // 4: 中の横棒（縦棒から右へ、長め）
-    brush(28, 120, 95, 120, 3, 7, 2),   // 5: 下の横棒（縦棒の末端から右へ）
+    "M2,6 H48",    // 1: 上の横棒（全幅）
+    "M15,6 V48",   // 2: 縦棒（左寄り・上から下まで）
+    "M15,20 H33",  // 3: 上の短い横棒（縦棒から右へ）
+    "M15,34 H46",  // 4: 中の横棒（縦棒から右へ）
+    "M15,48 H46",  // 5: 下の横棒（縦棒の末端から右へ）
   ];
-
   return (
-    <svg viewBox="0 0 100 130" className={`inline-block ${className}`}>
+    <svg viewBox="0 0 50 54" className={`inline-block ${className}`}>
       {paths.slice(0, strokes).map((d, i) => (
-        <path key={i} d={d} fill="currentColor" />
+        <path key={i} d={d} stroke="currentColor" strokeWidth="3" strokeLinecap="round" fill="none" />
       ))}
     </svg>
   );
