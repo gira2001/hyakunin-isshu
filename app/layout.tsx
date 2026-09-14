@@ -11,7 +11,15 @@ const notoSerifJP = Noto_Serif_JP({
 
 export const metadata: Metadata = {
   title: "百人一首 学習サイト",
-  description: "クイズ形式で百人一首を楽しく学ぼう",
+  description: "クイズ形式で百人一首を楽しく学ぼう。上の句の読み上げに合わせて下の句を選ぶかるた形式で、100首を楽しみながら覚えられます。友達との対戦モードも搭載。",
+  metadataBase: new URL("https://hyakunin-isshu-silk.vercel.app"),
+  openGraph: {
+    title: "百人一首 学習サイト",
+    description: "クイズ形式で百人一首を楽しく学ぼう",
+    url: "https://hyakunin-isshu-silk.vercel.app",
+    locale: "ja_JP",
+    type: "website",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
