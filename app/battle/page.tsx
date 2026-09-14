@@ -67,16 +67,16 @@ function generateRounds(): RoundData[] {
 }
 
 function SeijiChar({ strokes, className = "" }: { strokes: number; className?: string }) {
-  // viewBox 20×22 に対して strokeWidth=2 → 表示サイズに対して適切な太さになる
+  // 正の字: 左縦棒(上〜底) + 右縦棒(上〜中) + 上横棒 + 中横棒 + 下横棒
   const paths = [
-    "M1,3 H19",   // 1: 上の横棒（全幅）
-    "M6,3 V19",   // 2: 縦棒（x=6、左から30%の位置、上から下まで）
-    "M6,8 H13",   // 3: 上の短い横棒（縦棒から右へ・短め）
-    "M6,13 H19",  // 4: 中の横棒（縦棒から右へ）
-    "M6,19 H19",  // 5: 下の横棒（縦棒の末端から右へ）
+    "M2,5 H28",   // 1: 上の横棒（全幅）
+    "M9,5 V30",   // 2: 左の縦棒（x=9, 上から底まで）
+    "M9,17 H24",  // 3: 中の横棒（左縦棒〜右縦棒）
+    "M24,5 V17",  // 4: 右の縦棒（上〜中の横棒まで）
+    "M9,30 H28",  // 5: 下の横棒（左縦棒の底から右へ）
   ];
   return (
-    <svg viewBox="0 0 20 22" className={`inline-block ${className}`}>
+    <svg viewBox="0 0 30 34" className={`inline-block ${className}`}>
       {paths.slice(0, strokes).map((d, i) => (
         <path key={i} d={d} stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
       ))}
@@ -84,7 +84,7 @@ function SeijiChar({ strokes, className = "" }: { strokes: number; className?: s
   );
 }
 
-function SeijiTally({ score, charClass = "w-5 h-7", className = "" }: { score: number; charClass?: string; className?: string }) {
+function SeijiTally({ score, charClass = "w-6 h-7", className = "" }: { score: number; charClass?: string; className?: string }) {
   const complete = Math.floor(score / 5);
   const partial = score % 5;
   return (
