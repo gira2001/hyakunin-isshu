@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Noto_Serif_JP } from "next/font/google";
 import "./globals.css";
 import Navigation from "@/components/Navigation";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 const notoSerifJP = Noto_Serif_JP({
   subsets: ["latin"],
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           backgroundAttachment: "fixed",
         }}
       >
+        <ServiceWorkerRegister />
         <Navigation />
         <main className="max-w-4xl w-full mx-auto px-4 py-4 flex-1 min-h-0 overflow-auto">{children}</main>
       </body>
