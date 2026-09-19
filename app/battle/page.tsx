@@ -393,12 +393,27 @@ export default function BattlePage() {
         </div>
         <div className="bg-white/60 border border-stone-200 rounded-xl p-4 text-left space-y-2">
           <p className="text-xs text-stone-500">URLを共有</p>
-          <p className="text-xs text-stone-600 break-all font-mono">
-            {window.location.origin}/battle?code={roomCode}
-          </p>
-          <button onClick={copyUrl} className="text-xs text-purple-600 hover:underline font-medium">
-            {copied ? "コピーしました！" : "URLをコピー"}
-          </button>
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-stone-600 break-all font-mono flex-1">
+              {window.location.origin}/battle?code={roomCode}
+            </p>
+            <button
+              onClick={copyUrl}
+              title={copied ? "コピーしました！" : "URLをコピー"}
+              className="shrink-0 text-purple-500 hover:text-purple-700 transition-colors"
+            >
+              {copied ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
         <div className="flex items-center gap-2 justify-center text-stone-400 text-sm">
           <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" />
@@ -476,7 +491,7 @@ export default function BattlePage() {
             <div className={`w-2 h-2 shrink-0 rounded-full ${p1Done ? "bg-emerald-400" : "bg-amber-300 animate-pulse"}`} />
             <p className="text-amber-100 font-bold text-xs sm:text-sm truncate max-w-[80px] sm:max-w-none">{p1DisplayName}</p>
           </div>
-          <p className="text-amber-200/70 text-xs">{room.p1.score}点</p>
+          <p className="text-amber-200/70 text-sm font-bold">{["〇","一","二","三","四","五"][room.p1.score] ?? room.p1.score}</p>
         </div>
         <p className="text-amber-200/60 text-xs shrink-0 px-2">第{room.currentRound + 1}問</p>
         <div className="text-right min-w-0">
@@ -484,7 +499,7 @@ export default function BattlePage() {
             <p className="text-amber-100 font-bold text-xs sm:text-sm truncate max-w-[80px] sm:max-w-none">{p2DisplayName}</p>
             <div className={`w-2 h-2 shrink-0 rounded-full ${p2Done ? "bg-emerald-400" : "bg-amber-300 animate-pulse"}`} />
           </div>
-          <p className="text-amber-200/70 text-xs text-right">{room.p2?.score ?? 0}点</p>
+          <p className="text-amber-200/70 text-sm font-bold text-right">{["〇","一","二","三","四","五"][room.p2?.score ?? 0] ?? (room.p2?.score ?? 0)}</p>
         </div>
       </div>
 
