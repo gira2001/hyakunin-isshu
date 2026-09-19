@@ -449,12 +449,26 @@ export default function BattlePage() {
             </div>
           </div>
         </div>
-        <Link
-          href="/battle"
-          className="block bg-purple-700 text-white py-3 rounded-xl font-bold hover:bg-purple-600 transition-colors"
+        <button
+          onClick={() => {
+            window.speechSynthesis.cancel();
+            timersRef.current.forEach(clearTimeout);
+            setRoomCode(null);
+            setMyRole(null);
+            setRoom(null);
+            setMyAnswer(null);
+            setShowResult(false);
+            setRevealedCount(0);
+            setError("");
+            setInputCode("");
+            advancedRef.current = false;
+            revealedRef.current = 0;
+            selectedRef.current = false;
+          }}
+          className="block w-full bg-purple-700 text-white py-3 rounded-xl font-bold hover:bg-purple-600 transition-colors"
         >
           もう一度対戦
-        </Link>
+        </button>
         <Link href="/hyakunin" className="block text-sm text-purple-700 hover:underline">
           百人一首モードへ
         </Link>
