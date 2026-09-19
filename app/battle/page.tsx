@@ -66,35 +66,6 @@ function generateRounds(): RoundData[] {
   });
 }
 
-function SeijiChar({ strokes, className = "" }: { strokes: number; className?: string }) {
-  // 正の字: 左縦棒(上〜底) + 右縦棒(上〜中) + 上横棒 + 中横棒 + 下横棒
-  const paths = [
-    "M2,5 H28",   // 1: 上の横棒（全幅）
-    "M9,5 V30",   // 2: 左の縦棒（x=9, 上から底まで）
-    "M9,17 H24",  // 3: 中の横棒（左縦棒〜右縦棒）
-    "M24,5 V17",  // 4: 右の縦棒（上〜中の横棒まで）
-    "M9,30 H28",  // 5: 下の横棒（左縦棒の底から右へ）
-  ];
-  return (
-    <svg viewBox="0 0 30 34" className={`inline-block ${className}`}>
-      {paths.slice(0, strokes).map((d, i) => (
-        <path key={i} d={d} stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
-      ))}
-    </svg>
-  );
-}
-
-function SeijiTally({ score, charClass = "w-6 h-7", className = "" }: { score: number; charClass?: string; className?: string }) {
-  const complete = Math.floor(score / 5);
-  const partial = score % 5;
-  return (
-    <span className={`inline-flex items-center gap-0.5 ${className}`}>
-      {Array.from({ length: complete }).map((_, i) => <SeijiChar key={i} strokes={5} className={charClass} />)}
-      {partial > 0 && <SeijiChar strokes={partial} className={charClass} />}
-      {score === 0 && <span className="text-xs opacity-30 leading-none">—</span>}
-    </span>
-  );
-}
 
 export default function BattlePage() {
   const [myName, setMyName] = useState("");
@@ -454,14 +425,12 @@ export default function BattlePage() {
           <div className="flex justify-around items-center">
             <div className="flex flex-col items-center gap-1">
               <p className="text-stone-500 text-sm">{myDisplayName}</p>
-              <div className="text-purple-700"><SeijiTally score={myScore} charClass="w-10 h-12" /></div>
-              <p className="text-lg font-bold text-purple-700">{myScore}点</p>
+              <p className="text-5xl font-bold text-purple-700">{myScore}</p>
             </div>
             <p className="text-stone-300 text-2xl">vs</p>
             <div className="flex flex-col items-center gap-1">
               <p className="text-stone-500 text-sm">{oppDisplayName}</p>
-              <div className="text-stone-400"><SeijiTally score={oppScore} charClass="w-10 h-12" /></div>
-              <p className="text-lg font-bold text-stone-500">{oppScore}点</p>
+              <p className="text-5xl font-bold text-stone-500">{oppScore}</p>
             </div>
           </div>
         </div>
@@ -507,7 +476,7 @@ export default function BattlePage() {
             <div className={`w-2 h-2 shrink-0 rounded-full ${p1Done ? "bg-emerald-400" : "bg-amber-300 animate-pulse"}`} />
             <p className="text-amber-100 font-bold text-xs sm:text-sm truncate max-w-[80px] sm:max-w-none">{p1DisplayName}</p>
           </div>
-          <div className="text-amber-200 mt-0.5"><SeijiTally score={room.p1.score} /></div>
+          <p className="text-amber-200/70 text-xs">{room.p1.score}点</p>
         </div>
         <p className="text-amber-200/60 text-xs shrink-0 px-2">第{room.currentRound + 1}問</p>
         <div className="text-right min-w-0">
@@ -515,7 +484,7 @@ export default function BattlePage() {
             <p className="text-amber-100 font-bold text-xs sm:text-sm truncate max-w-[80px] sm:max-w-none">{p2DisplayName}</p>
             <div className={`w-2 h-2 shrink-0 rounded-full ${p2Done ? "bg-emerald-400" : "bg-amber-300 animate-pulse"}`} />
           </div>
-          <div className="text-amber-200 mt-0.5 flex justify-end"><SeijiTally score={room.p2?.score ?? 0} /></div>
+          <p className="text-amber-200/70 text-xs text-right">{room.p2?.score ?? 0}点</p>
         </div>
       </div>
 
