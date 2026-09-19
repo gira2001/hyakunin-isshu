@@ -29,6 +29,8 @@ interface RoomData {
   p1: RoomPlayer;
   p2: RoomPlayer | null;
   createdAt: number;
+  p1WantsRematch?: boolean;
+  p2WantsRematch?: boolean;
 }
 
 function toModernPronunciation(kana: string): string {
@@ -241,6 +243,26 @@ export default function BattlePage() {
     }, 2000);
   }, [room?.p1?.answeredIndex, room?.p2?.answeredIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // 両者リマッチ希望で p1 がリセット
+  useEffect(() => {
+    if (!room || !roomCode || room.status !== "finished") return;
+    if (!room.p1WantsRematch || !room.p2WantsRematch) return;
+    if (myRole !== "p1") return;
+    update(ref(db, `rooms/${roomCode}`), {
+      status: "playing",
+      rounds: generateRounds(),
+      currentRound: 0,
+      "p1/score": 0,
+      "p1/answeredIndex": null,
+      "p1/answeredAt": null,
+      "p2/score": 0,
+      "p2/answeredIndex": null,
+      "p2/answeredAt": null,
+      p1WantsRematch: false,
+      p2WantsRematch: false,
+    });
+  }, [room?.p1WantsRematch, room?.p2WantsRematch]); // eslint-disable-line react-hooks/exhaustive-deps
+
   async function createRoom() {
     setError("");
     window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
@@ -449,26 +471,22 @@ export default function BattlePage() {
             </div>
           </div>
         </div>
-        <button
-          onClick={() => {
-            window.speechSynthesis.cancel();
-            timersRef.current.forEach(clearTimeout);
-            setRoomCode(null);
-            setMyRole(null);
-            setRoom(null);
-            setMyAnswer(null);
-            setShowResult(false);
-            setRevealedCount(0);
-            setError("");
-            setInputCode("");
-            advancedRef.current = false;
-            revealedRef.current = 0;
-            selectedRef.current = false;
-          }}
-          className="block w-full bg-purple-700 text-white py-3 rounded-xl font-bold hover:bg-purple-600 transition-colors"
-        >
-          もう一度対戦
-        </button>
+        {(() => {
+          const myWants = myRole === "p1" ? room.p1WantsRematch : room.p2WantsRematch;
+          const oppWants = myRole === "p1" ? room.p2WantsRematch : room.p1WantsRematch;
+          return myWants ? (
+            <div className="bg-purple-50 border border-purple-200 rounded-xl py-3 text-center text-sm text-purple-600">
+              相手の承認を待っています...
+            </div>
+          ) : (
+            <button
+              onClick={() => update(ref(db, `rooms/${roomCode!}`), { [`${myRole}WantsRematch`]: true })}
+              className="block w-full bg-purple-700 text-white py-3 rounded-xl font-bold hover:bg-purple-600 transition-colors"
+            >
+              {oppWants ? "相手もリマッチ希望！ → 開始する" : "もう一度対戦"}
+            </button>
+          );
+        })()}
         <Link href="/hyakunin" className="block text-sm text-purple-700 hover:underline">
           百人一首モードへ
         </Link>
