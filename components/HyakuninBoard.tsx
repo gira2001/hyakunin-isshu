@@ -161,7 +161,7 @@ export default function HyakuninBoard({ question, onAnswer, voice, skipSpeech = 
                   key={phraseIdx}
                   style={{
                     writingMode: "vertical-rl",
-                    fontSize: phrase.length === 7 ? "clamp(0.85rem, 3.4dvh, 2.3rem)" : "clamp(1rem, 4dvh, 2.8rem)",
+                    fontSize: phrase.length >= 8 ? "clamp(0.72rem, 2.9dvh, 2rem)" : phrase.length === 7 ? "clamp(0.85rem, 3.4dvh, 2.3rem)" : "clamp(1rem, 4dvh, 2.8rem)",
                     lineHeight: 1,
                   }}
                   className="text-stone-900 tracking-widest"
