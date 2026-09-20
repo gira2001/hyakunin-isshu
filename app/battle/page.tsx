@@ -469,6 +469,8 @@ export default function BattlePage() {
   if (room.status === "ready") {
     const myReady = myRole === "p1" ? room.p1Ready : room.p2Ready;
     const oppReady = myRole === "p1" ? room.p2Ready : room.p1Ready;
+    const myReadyName = myRole === "p1" ? (room.p1.name || "あなた") : (room.p2?.name || "あなた");
+    const oppReadyName = myRole === "p1" ? (room.p2?.name || "あいて") : (room.p1.name || "あいて");
     function handleReady() {
       // 準備OK時に音声合成をウォームアップ
       window.speechSynthesis.cancel();
@@ -481,12 +483,12 @@ export default function BattlePage() {
       <div className="max-w-sm mx-auto pt-6 text-center space-y-5">
         <div className="flex justify-around text-sm text-stone-500">
           <div className="flex flex-col items-center gap-1">
-            <p>{room.p1.name || "P1"}</p>
-            <span className="text-2xl">{room.p1Ready ? "✅" : "⏳"}</span>
+            <p>{myReadyName}</p>
+            <span className="text-2xl">{myReady ? "✅" : "⏳"}</span>
           </div>
           <div className="flex flex-col items-center gap-1">
-            <p>{room.p2?.name || "P2"}</p>
-            <span className="text-2xl">{room.p2Ready ? "✅" : "⏳"}</span>
+            <p>{oppReadyName}</p>
+            <span className="text-2xl">{oppReady ? "✅" : "⏳"}</span>
           </div>
         </div>
 
