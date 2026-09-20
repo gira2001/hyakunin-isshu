@@ -490,12 +490,6 @@ export default function BattlePage() {
           </div>
         </div>
 
-        <img
-          src="/images/machi.png"
-          alt="待"
-          className="w-48 h-48 mx-auto object-contain"
-        />
-
         {oppReady && !myReady && (
           <p className="text-sm text-purple-600 font-bold">相手が準備できました！</p>
         )}
@@ -526,18 +520,18 @@ export default function BattlePage() {
     return (
       <div className="max-w-sm mx-auto pt-8 text-center space-y-6">
         <h2 className="text-4xl font-bold text-purple-900">
-          {draw ? "引き分け" : won ? "勝利！🎉" : "敗北..."}
+          {draw ? "引き分け" : won ? "勝利！" : "敗北..."}
         </h2>
         <div className="bg-white rounded-2xl border-2 border-purple-200 p-8">
           <div className="flex justify-around items-center">
             <div className="flex flex-col items-center gap-1">
               <p className="text-stone-500 text-sm">{myDisplayName}</p>
-              <p className="text-5xl font-bold text-purple-700">{myScore}</p>
+              <p className="text-5xl font-bold text-purple-700">{["〇","一","二","三","四","五"][myScore] ?? myScore}</p>
             </div>
             <p className="text-stone-300 text-2xl">vs</p>
             <div className="flex flex-col items-center gap-1">
               <p className="text-stone-500 text-sm">{oppDisplayName}</p>
-              <p className="text-5xl font-bold text-stone-500">{oppScore}</p>
+              <p className="text-5xl font-bold text-stone-500">{["〇","一","二","三","四","五"][oppScore] ?? oppScore}</p>
             </div>
           </div>
         </div>
