@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { ref, set, get, onValue, update } from "firebase/database";
+import { ref, set, get, onValue, update, remove, runTransaction } from "firebase/database";
 import { db } from "@/lib/firebase";
 import { poems } from "@/data/poems";
 import Link from "next/link";
@@ -33,6 +33,7 @@ interface RoomData {
   p2Ready?: boolean;
   p1WantsRematch?: boolean;
   p2WantsRematch?: boolean;
+  isRandom?: boolean;
 }
 
 function toModernPronunciation(kana: string): string {
@@ -82,6 +83,7 @@ export default function BattlePage() {
   const [revealedCount, setRevealedCount] = useState(0);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [isMatchmaking, setIsMatchmaking] = useState(false);
   const [voice, setVoice] = useState<SpeechSynthesisVoice | null>(null);
   const advancedRef = useRef(false);
   const revealedRef = useRef(0);
@@ -281,6 +283,61 @@ export default function BattlePage() {
     });
   }, [room?.p1WantsRematch, room?.p2WantsRematch]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  async function searchRandom() {
+    if (!myName.trim()) { setError("名前を入力してください"); return; }
+    setError("");
+    setIsMatchmaking(true);
+    window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
+
+    const matchRef = ref(db, "matchmaking/waiting");
+    let claimedCode: string | null = null;
+
+    // トランザクションで待機中ルームを競合なく取得
+    await runTransaction(matchRef, (current) => {
+      if (current?.roomCode) {
+        claimedCode = current.roomCode;
+        return null; // キューから削除（取得）
+      }
+      return current; // 変更なし
+    });
+
+    if (claimedCode) {
+      const snap = await get(ref(db, `rooms/${claimedCode}`));
+      if (snap.exists() && snap.val().status === "waiting") {
+        await update(ref(db, `rooms/${claimedCode}`), {
+          "p2/name": myName.trim(),
+          "p2/score": 0,
+          "p2/answeredIndex": null,
+          "p2/answeredAt": null,
+          status: "ready",
+          p1Ready: false,
+          p2Ready: false,
+        });
+        setRoomCode(claimedCode);
+        setMyRole("p2");
+        setIsMatchmaking(false);
+        return;
+      }
+      // 取得したルームが無効だったら再試行せず自分が待機側に
+    }
+
+    // 誰も待っていない → 自分がルームを作ってキューに登録
+    const code = generateCode();
+    await set(ref(db, `rooms/${code}`), {
+      status: "waiting",
+      rounds: generateRounds(),
+      currentRound: 0,
+      createdAt: Date.now(),
+      isRandom: true,
+      p1: { name: myName.trim(), score: 0, answeredIndex: null, answeredAt: null },
+      p2: null,
+    });
+    await set(matchRef, { roomCode: code, createdAt: Date.now() });
+    setRoomCode(code);
+    setMyRole("p1");
+    setIsMatchmaking(false);
+  }
+
   async function createRoom() {
     setError("");
     window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
@@ -373,6 +430,32 @@ export default function BattlePage() {
 
   // ─── ロビー ───
   if (!roomCode) {
+    if (isMatchmaking) {
+      return (
+        <div className="max-w-sm mx-auto pt-8 text-center space-y-6">
+          <h2 className="text-xl font-bold text-purple-900">対戦相手を探しています...</h2>
+          <div className="flex justify-center gap-1.5 py-4">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="w-3 h-3 bg-purple-400 rounded-full animate-bounce"
+                style={{ animationDelay: `${i * 0.15}s` }}
+              />
+            ))}
+          </div>
+          <p className="text-stone-400 text-sm">マッチングが完了するまでお待ちください</p>
+          <button
+            onClick={() => {
+              remove(ref(db, "matchmaking/waiting"));
+              setIsMatchmaking(false);
+            }}
+            className="w-full py-3 rounded-xl font-bold text-base border-2 border-stone-300 text-stone-500 hover:bg-stone-50 transition-colors"
+          >
+            キャンセル
+          </button>
+        </div>
+      );
+    }
     return (
       <div className="max-w-sm mx-auto pt-8 space-y-5">
         <h1 className="text-2xl font-bold text-purple-900 text-center tracking-widest">対戦モード</h1>
@@ -387,20 +470,22 @@ export default function BattlePage() {
         </div>
         {error && <p className="text-red-500 text-sm">{error}</p>}
         <button
-          onClick={createRoom}
-          className={`w-full py-3 rounded-xl font-bold text-lg transition-colors shadow ${
-            inputCode.trim()
-              ? "bg-white border-2 border-purple-400 text-purple-700 hover:bg-purple-50"
-              : "bg-purple-700 text-white hover:bg-purple-600"
-          }`}
+          onClick={searchRandom}
+          className="w-full py-3 rounded-xl font-bold text-lg transition-colors shadow bg-purple-700 text-white hover:bg-purple-600"
         >
-          ルームを作成
+          ランダム対戦
         </button>
         <div className="flex items-center gap-3">
           <hr className="flex-1 border-stone-300" />
-          <span className="text-stone-400 text-sm">または</span>
+          <span className="text-stone-400 text-sm">または友達と</span>
           <hr className="flex-1 border-stone-300" />
         </div>
+        <button
+          onClick={createRoom}
+          className="w-full py-3 rounded-xl font-bold text-lg transition-colors bg-white border-2 border-purple-400 text-purple-700 hover:bg-purple-50"
+        >
+          ルームを作成
+        </button>
         <div className="space-y-2">
           <input
             value={inputCode}
@@ -426,9 +511,16 @@ export default function BattlePage() {
 
   // ─── 待機中 ───
   if (!room || room.status === "waiting") {
+    async function cancelWaiting() {
+      if (room?.isRandom) await remove(ref(db, "matchmaking/waiting"));
+      setRoomCode(null);
+      setMyRole(null);
+    }
     return (
       <div className="max-w-sm mx-auto pt-8 text-center space-y-6">
-        <h2 className="text-xl font-bold text-purple-900">友達を待っています</h2>
+        <h2 className="text-xl font-bold text-purple-900">
+          {room?.isRandom ? "対戦相手を探しています..." : "友達を待っています"}
+        </h2>
         <div className="bg-white border-2 border-purple-200 rounded-2xl p-6 space-y-2">
           <p className="text-stone-400 text-sm">ルームコード</p>
           <p className="text-5xl font-bold text-purple-700 font-mono tracking-widest">{roomCode}</p>
