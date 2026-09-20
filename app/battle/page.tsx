@@ -800,8 +800,12 @@ export default function BattlePage() {
   const myPlayer = myRole === "p1" ? room.p1 : room.p2;
   const oppPlayer = myRole === "p1" ? room.p2 : room.p1;
   const oppAnsweredCorrectly = oppPlayer?.answeredIndex != null && oppPlayer.answeredIndex === round.correctIndex;
-  const p1DisplayName = myRole === "p1" ? (room.p1.name || "あなた") : (room.p1.name || "あいて");
-  const p2DisplayName = myRole === "p2" ? (room.p2?.name || "あなた") : (room.p2?.name || "あいて");
+  const myDone = myRole === "p1" ? p1Done : p2Done;
+  const oppDone = myRole === "p1" ? p2Done : p1Done;
+  const myDisplayName = myRole === "p1" ? (room.p1.name || "あなた") : (room.p2?.name || "あなた");
+  const oppDisplayName = myRole === "p1" ? (room.p2?.name || "あいて") : (room.p1.name || "あいて");
+  const myScore = myRole === "p1" ? room.p1.score : (room.p2?.score ?? 0);
+  const oppScore = myRole === "p1" ? (room.p2?.score ?? 0) : room.p1.score;
 
   function torifudaClass(i: number): string {
     const base = "flex-1 min-h-0 max-w-[42vw] sm:max-w-36 relative transition-all group ";
@@ -813,22 +817,22 @@ export default function BattlePage() {
 
   return (
     <div className="-mx-4 -mt-4 -mb-4 h-[calc(100%+2rem)] overflow-hidden flex flex-col gap-2 px-4 pt-2 pb-2">
-      {/* スコアバー */}
+      {/* スコアバー：左=自分、右=相手 */}
       <div className="flex-none flex items-center justify-between bg-green-800/60 rounded-xl px-4 py-2">
         <div className="text-left min-w-0">
           <div className="flex items-center gap-1.5">
-            <div className={`w-2 h-2 shrink-0 rounded-full ${p1Done ? "bg-emerald-400" : "bg-amber-300 animate-pulse"}`} />
-            <p className="text-amber-100 font-bold text-xs sm:text-sm truncate max-w-[80px] sm:max-w-none">{p1DisplayName}</p>
+            <div className={`w-2 h-2 shrink-0 rounded-full ${myDone ? "bg-emerald-400" : "bg-amber-300 animate-pulse"}`} />
+            <p className="text-amber-100 font-bold text-xs sm:text-sm truncate max-w-[80px] sm:max-w-none">{myDisplayName}</p>
           </div>
-          <p className="text-amber-200/70 text-sm font-bold">{["〇","一","二","三","四","五"][room.p1.score] ?? room.p1.score}</p>
+          <p className="text-amber-200/70 text-sm font-bold">{["〇","一","二","三","四","五"][myScore] ?? myScore}</p>
         </div>
         <p className="text-amber-200/60 text-xs shrink-0 px-2">第{room.currentRound + 1}問</p>
         <div className="text-right min-w-0">
           <div className="flex items-center justify-end gap-1.5">
-            <p className="text-amber-100 font-bold text-xs sm:text-sm truncate max-w-[80px] sm:max-w-none">{p2DisplayName}</p>
-            <div className={`w-2 h-2 shrink-0 rounded-full ${p2Done ? "bg-emerald-400" : "bg-amber-300 animate-pulse"}`} />
+            <p className="text-amber-100 font-bold text-xs sm:text-sm truncate max-w-[80px] sm:max-w-none">{oppDisplayName}</p>
+            <div className={`w-2 h-2 shrink-0 rounded-full ${oppDone ? "bg-emerald-400" : "bg-amber-300 animate-pulse"}`} />
           </div>
-          <p className="text-amber-200/70 text-sm font-bold text-right">{["〇","一","二","三","四","五"][room.p2?.score ?? 0] ?? (room.p2?.score ?? 0)}</p>
+          <p className="text-amber-200/70 text-sm font-bold text-right">{["〇","一","二","三","四","五"][oppScore] ?? oppScore}</p>
         </div>
       </div>
 
