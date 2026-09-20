@@ -247,6 +247,40 @@ export default function BattlePage() {
     }, 2000);
   }, [room?.p1?.answeredIndex, room?.p2?.answeredIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ランダム待機中に相手の部屋が現れたら自動で参加（両者が同時に部屋を作った場合の救済）
+  useEffect(() => {
+    if (!room?.isRandom || room.status !== "waiting" || myRole !== "p1" || !roomCode) return;
+    const matchRef = ref(db, "matchmaking/waiting");
+    let joining = false;
+    return onValue(matchRef, async (snap) => {
+      if (joining) return;
+      const data = snap.val();
+      if (!data?.roomCode || data.roomCode === roomCode) return;
+      joining = true;
+      const otherCode = data.roomCode;
+      let claimed = false;
+      await runTransaction(matchRef, (current) => {
+        if (current?.roomCode && current.roomCode !== roomCode) { claimed = true; return null; }
+        return undefined;
+      });
+      if (!claimed) { joining = false; return; }
+      const roomSnap = await get(ref(db, `rooms/${otherCode}`));
+      if (!roomSnap.exists() || roomSnap.val().status !== "waiting") { joining = false; return; }
+      await update(ref(db, `rooms/${otherCode}`), {
+        "p2/name": myName,
+        "p2/score": 0,
+        "p2/answeredIndex": null,
+        "p2/answeredAt": null,
+        status: "ready",
+        p1Ready: false,
+        p2Ready: false,
+      });
+      await remove(ref(db, `rooms/${roomCode}`));
+      setRoomCode(otherCode);
+      setMyRole("p2");
+    });
+  }, [room?.isRandom, room?.status, myRole, roomCode]); // eslint-disable-line
+
   // 両者準備OKで p1 がゲーム開始
   useEffect(() => {
     if (!room || !roomCode || room.status !== "ready") return;
