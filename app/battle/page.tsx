@@ -507,7 +507,6 @@ export default function BattlePage() {
             onClick={() => setMode("random")}
             className="block bg-purple-700 text-white rounded-2xl p-6 text-center hover:bg-purple-600 transition-colors shadow-lg"
           >
-            <p className="text-4xl mb-2">🎲</p>
             <p className="text-xl font-bold">ランダム対戦</p>
             <p className="text-purple-200 text-sm mt-1">知らない人とマッチング</p>
           </Link>
@@ -516,7 +515,6 @@ export default function BattlePage() {
             onClick={() => setMode("friend")}
             className="block bg-white border-2 border-purple-400 text-purple-700 rounded-2xl p-6 text-center hover:bg-purple-50 transition-colors shadow"
           >
-            <p className="text-4xl mb-2">👥</p>
             <p className="text-xl font-bold">友人と対戦</p>
             <p className="text-purple-400 text-sm mt-1">ルームコードで招待</p>
           </Link>
