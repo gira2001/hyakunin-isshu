@@ -478,26 +478,31 @@ export default function BattlePage() {
       update(ref(db, `rooms/${roomCode!}`), { [`${myRole}Ready`]: true });
     }
     return (
-      <div className="max-w-sm mx-auto pt-8 text-center space-y-6">
-        <h2 className="text-2xl font-bold text-purple-900">対戦準備</h2>
-        <div className="bg-white border-2 border-purple-200 rounded-2xl p-6 space-y-4">
-          <div className="flex justify-around">
-            <div className="flex flex-col items-center gap-2">
-              <p className="text-sm text-stone-500">{room.p1.name || "P1"}</p>
-              <span className="text-3xl">{room.p1Ready ? "✅" : "⏳"}</span>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <p className="text-sm text-stone-500">{room.p2?.name || "P2"}</p>
-              <span className="text-3xl">{room.p2Ready ? "✅" : "⏳"}</span>
-            </div>
+      <div className="max-w-sm mx-auto pt-6 text-center space-y-5">
+        <div className="flex justify-around text-sm text-stone-500">
+          <div className="flex flex-col items-center gap-1">
+            <p>{room.p1.name || "P1"}</p>
+            <span className="text-2xl">{room.p1Ready ? "✅" : "⏳"}</span>
           </div>
-          {oppReady && !myReady && (
-            <p className="text-sm text-purple-600 font-bold">相手が準備できました！</p>
-          )}
-          {myReady && !oppReady && (
-            <p className="text-sm text-stone-400">相手の準備を待っています...</p>
-          )}
+          <div className="flex flex-col items-center gap-1">
+            <p>{room.p2?.name || "P2"}</p>
+            <span className="text-2xl">{room.p2Ready ? "✅" : "⏳"}</span>
+          </div>
         </div>
+
+        <img
+          src="/images/machi.png"
+          alt="待"
+          className="w-48 h-48 mx-auto object-contain"
+        />
+
+        {oppReady && !myReady && (
+          <p className="text-sm text-purple-600 font-bold">相手が準備できました！</p>
+        )}
+        {myReady && !oppReady && (
+          <p className="text-sm text-stone-400">相手の準備を待っています...</p>
+        )}
+
         {!myReady && (
           <button
             onClick={handleReady}
