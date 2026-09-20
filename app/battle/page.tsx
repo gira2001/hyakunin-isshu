@@ -289,53 +289,62 @@ export default function BattlePage() {
     setIsMatchmaking(true);
     window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
 
-    const matchRef = ref(db, "matchmaking/waiting");
-    let claimedCode: string | null = null;
+    try {
+      const matchRef = ref(db, "matchmaking/waiting");
 
-    // トランザクションで待機中ルームを競合なく取得
-    await runTransaction(matchRef, (current) => {
-      if (current?.roomCode) {
-        claimedCode = current.roomCode;
-        return null; // キューから削除（取得）
-      }
-      return current; // 変更なし
-    });
+      // get() でサーバーデータを取得してローカルキャッシュを更新してからトランザクションを実行
+      const preSnap = await get(matchRef);
+      let claimedCode: string | null = null;
 
-    if (claimedCode) {
-      const snap = await get(ref(db, `rooms/${claimedCode}`));
-      if (snap.exists() && snap.val().status === "waiting") {
-        await update(ref(db, `rooms/${claimedCode}`), {
-          "p2/name": myName.trim(),
-          "p2/score": 0,
-          "p2/answeredIndex": null,
-          "p2/answeredAt": null,
-          status: "ready",
-          p1Ready: false,
-          p2Ready: false,
+      if (preSnap.exists() && preSnap.val()?.roomCode) {
+        // キャッシュが更新された状態でトランザクション（競合なく取得）
+        await runTransaction(matchRef, (current) => {
+          if (current?.roomCode) {
+            claimedCode = current.roomCode;
+            return null; // キューから削除（取得）
+          }
+          return undefined; // すでに他の人が取得済み → abort
         });
-        setRoomCode(claimedCode);
-        setMyRole("p2");
-        setIsMatchmaking(false);
-        return;
       }
-      // 取得したルームが無効だったら再試行せず自分が待機側に
-    }
 
-    // 誰も待っていない → 自分がルームを作ってキューに登録
-    const code = generateCode();
-    await set(ref(db, `rooms/${code}`), {
-      status: "waiting",
-      rounds: generateRounds(),
-      currentRound: 0,
-      createdAt: Date.now(),
-      isRandom: true,
-      p1: { name: myName.trim(), score: 0, answeredIndex: null, answeredAt: null },
-      p2: null,
-    });
-    await set(matchRef, { roomCode: code, createdAt: Date.now() });
-    setRoomCode(code);
-    setMyRole("p1");
-    setIsMatchmaking(false);
+      if (claimedCode) {
+        const snap = await get(ref(db, `rooms/${claimedCode}`));
+        if (snap.exists() && snap.val().status === "waiting") {
+          await update(ref(db, `rooms/${claimedCode}`), {
+            "p2/name": myName.trim(),
+            "p2/score": 0,
+            "p2/answeredIndex": null,
+            "p2/answeredAt": null,
+            status: "ready",
+            p1Ready: false,
+            p2Ready: false,
+          });
+          setRoomCode(claimedCode);
+          setMyRole("p2");
+          setIsMatchmaking(false);
+          return;
+        }
+      }
+
+      // 誰も待っていない → 自分がルームを作ってキューに登録
+      const code = generateCode();
+      await set(ref(db, `rooms/${code}`), {
+        status: "waiting",
+        rounds: generateRounds(),
+        currentRound: 0,
+        createdAt: Date.now(),
+        isRandom: true,
+        p1: { name: myName.trim(), score: 0, answeredIndex: null, answeredAt: null },
+        p2: null,
+      });
+      await set(matchRef, { roomCode: code, createdAt: Date.now() });
+      setRoomCode(code);
+      setMyRole("p1");
+      setIsMatchmaking(false);
+    } catch (e) {
+      setError("マッチング中にエラーが発生しました: " + String(e));
+      setIsMatchmaking(false);
+    }
   }
 
   async function createRoom() {
