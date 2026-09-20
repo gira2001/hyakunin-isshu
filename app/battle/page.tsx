@@ -321,7 +321,6 @@ export default function BattlePage() {
   }, [room?.p1WantsRematch, room?.p2WantsRematch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function searchRandom() {
-    if (!myName.trim()) { setError("名前を入力してください"); return; }
     setError("");
     setIsMatchmaking(true);
     window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
