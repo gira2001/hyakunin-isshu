@@ -457,6 +457,26 @@ export default function BattlePage() {
             </button>
           </div>
         </div>
+        <div className="flex gap-3 justify-center">
+          <a
+            href={`https://line.me/R/msg/text/?${encodeURIComponent(`百人一首対戦に招待！\n${window.location.origin}/battle?code=${roomCode}`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 bg-[#06C755] text-white text-sm font-bold px-4 py-2 rounded-full hover:opacity-90 transition-opacity"
+          >
+            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M12 2C6.48 2 2 6.08 2 11.1c0 3.49 2.19 6.55 5.47 8.27l-.67 2.49c-.07.26.21.47.44.33l2.89-1.74A11.3 11.3 0 0 0 12 20.2c5.52 0 10-4.08 10-9.1S17.52 2 12 2z"/></svg>
+            LINE
+          </a>
+          <a
+            href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`百人一首対戦に招待！一緒にやろう🃏`)}&url=${encodeURIComponent(`${window.location.origin}/battle?code=${roomCode}`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 bg-black text-white text-sm font-bold px-4 py-2 rounded-full hover:opacity-80 transition-opacity"
+          >
+            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            X
+          </a>
+        </div>
         <div className="flex items-center gap-2 justify-center text-stone-400 text-sm">
           <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" />
           <span>相手の参加を待っています...</span>
