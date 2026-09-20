@@ -84,6 +84,7 @@ export default function BattlePage() {
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [isMatchmaking, setIsMatchmaking] = useState(false);
+  const [mode, setMode] = useState<"random" | "friend" | null>(null);
   const [voice, setVoice] = useState<SpeechSynthesisVoice | null>(null);
   const advancedRef = useRef(false);
   const revealedRef = useRef(0);
@@ -101,11 +102,13 @@ export default function BattlePage() {
     return () => { window.speechSynthesis.onvoiceschanged = null; };
   }, []);
 
-  // URLパラメータからコードを読み込む
+  // URLパラメータからモード・コードを読み込む
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
-    if (code) setInputCode(code.toUpperCase());
+    const m = params.get("mode");
+    if (code) { setInputCode(code.toUpperCase()); setMode("friend"); }
+    else if (m === "random" || m === "friend") setMode(m);
   }, []);
 
   // Firebaseルーム購読
@@ -473,25 +476,19 @@ export default function BattlePage() {
 
   // ─── ロビー ───
   if (!roomCode) {
+    // マッチング中
     if (isMatchmaking) {
       return (
         <div className="max-w-sm mx-auto pt-8 text-center space-y-6">
           <h2 className="text-xl font-bold text-purple-900">対戦相手を探しています...</h2>
           <div className="flex justify-center gap-1.5 py-4">
             {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className="w-3 h-3 bg-purple-400 rounded-full animate-bounce"
-                style={{ animationDelay: `${i * 0.15}s` }}
-              />
+              <div key={i} className="w-3 h-3 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
             ))}
           </div>
           <p className="text-stone-400 text-sm">マッチングが完了するまでお待ちください</p>
           <button
-            onClick={() => {
-              remove(ref(db, "matchmaking/waiting"));
-              setIsMatchmaking(false);
-            }}
+            onClick={() => { remove(ref(db, "matchmaking/waiting")); setIsMatchmaking(false); }}
             className="w-full py-3 rounded-xl font-bold text-base border-2 border-stone-300 text-stone-500 hover:bg-stone-50 transition-colors"
           >
             キャンセル
@@ -499,9 +496,69 @@ export default function BattlePage() {
         </div>
       );
     }
+
+    // モード選択
+    if (!mode) {
+      return (
+        <div className="max-w-sm mx-auto pt-8 space-y-5">
+          <h1 className="text-2xl font-bold text-purple-900 text-center tracking-widest">対戦モード</h1>
+          <Link
+            href="/battle?mode=random"
+            onClick={() => setMode("random")}
+            className="block bg-purple-700 text-white rounded-2xl p-6 text-center hover:bg-purple-600 transition-colors shadow-lg"
+          >
+            <p className="text-4xl mb-2">🎲</p>
+            <p className="text-xl font-bold">ランダム対戦</p>
+            <p className="text-purple-200 text-sm mt-1">知らない人とマッチング</p>
+          </Link>
+          <Link
+            href="/battle?mode=friend"
+            onClick={() => setMode("friend")}
+            className="block bg-white border-2 border-purple-400 text-purple-700 rounded-2xl p-6 text-center hover:bg-purple-50 transition-colors shadow"
+          >
+            <p className="text-4xl mb-2">👥</p>
+            <p className="text-xl font-bold">友人と対戦</p>
+            <p className="text-purple-400 text-sm mt-1">ルームコードで招待</p>
+          </Link>
+        </div>
+      );
+    }
+
+    // ランダム対戦ロビー
+    if (mode === "random") {
+      return (
+        <div className="max-w-sm mx-auto pt-8 space-y-5">
+          <div className="flex items-center gap-2">
+            <Link href="/battle" onClick={() => setMode(null)} className="text-purple-400 hover:text-purple-600 text-sm">← 戻る</Link>
+            <h1 className="text-xl font-bold text-purple-900 tracking-widest">ランダム対戦</h1>
+          </div>
+          <div>
+            <label className="text-sm text-stone-600 mb-1 block">あなたの名前</label>
+            <input
+              value={myName}
+              onChange={(e) => setMyName(e.target.value)}
+              placeholder="名前を入力"
+              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 bg-white focus:outline-none focus:border-purple-400"
+            />
+          </div>
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          <button
+            onClick={searchRandom}
+            className="w-full py-3 rounded-xl font-bold text-lg transition-colors shadow bg-purple-700 text-white hover:bg-purple-600"
+          >
+            対戦相手を探す
+          </button>
+        </div>
+      );
+    }
+
+    // 友人と対戦ロビー
     return (
       <div className="max-w-sm mx-auto pt-8 space-y-5">
-        <h1 className="text-2xl font-bold text-purple-900 text-center tracking-widest">対戦モード</h1>
+        <div className="flex items-center gap-2">
+          <Link href="/battle" onClick={() => setMode(null)} className="text-purple-400 hover:text-purple-600 text-sm">← 戻る</Link>
+          <h1 className="text-xl font-bold text-purple-900 tracking-widest">友人と対戦</h1>
+        </div>
         <div>
           <label className="text-sm text-stone-600 mb-1 block">あなたの名前</label>
           <input
@@ -513,22 +570,16 @@ export default function BattlePage() {
         </div>
         {error && <p className="text-red-500 text-sm">{error}</p>}
         <button
-          onClick={searchRandom}
-          className="w-full py-3 rounded-xl font-bold text-lg transition-colors shadow bg-purple-700 text-white hover:bg-purple-600"
-        >
-          ランダム対戦
-        </button>
-        <div className="flex items-center gap-3">
-          <hr className="flex-1 border-stone-300" />
-          <span className="text-stone-400 text-sm">または友達と</span>
-          <hr className="flex-1 border-stone-300" />
-        </div>
-        <button
           onClick={createRoom}
-          className="w-full py-3 rounded-xl font-bold text-lg transition-colors bg-white border-2 border-purple-400 text-purple-700 hover:bg-purple-50"
+          className="w-full py-3 rounded-xl font-bold text-lg transition-colors shadow bg-purple-700 text-white hover:bg-purple-600"
         >
           ルームを作成
         </button>
+        <div className="flex items-center gap-3">
+          <hr className="flex-1 border-stone-300" />
+          <span className="text-stone-400 text-sm">または</span>
+          <hr className="flex-1 border-stone-300" />
+        </div>
         <div className="space-y-2">
           <input
             value={inputCode}
