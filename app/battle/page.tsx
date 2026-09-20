@@ -23,12 +23,14 @@ interface RoundData {
 }
 
 interface RoomData {
-  status: "waiting" | "playing" | "finished";
+  status: "waiting" | "ready" | "playing" | "finished";
   rounds: RoundData[];
   currentRound: number;
   p1: RoomPlayer;
   p2: RoomPlayer | null;
   createdAt: number;
+  p1Ready?: boolean;
+  p2Ready?: boolean;
   p1WantsRematch?: boolean;
   p2WantsRematch?: boolean;
 }
@@ -243,13 +245,27 @@ export default function BattlePage() {
     }, 2000);
   }, [room?.p1?.answeredIndex, room?.p2?.answeredIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // 両者準備OKで p1 がゲーム開始
+  useEffect(() => {
+    if (!room || !roomCode || room.status !== "ready") return;
+    if (!room.p1Ready || !room.p2Ready) return;
+    if (myRole !== "p1") return;
+    // 音声合成を事前にキャンセルしてウォームアップ
+    window.speechSynthesis.cancel();
+    update(ref(db, `rooms/${roomCode}`), {
+      status: "playing",
+      p1Ready: false,
+      p2Ready: false,
+    });
+  }, [room?.p1Ready, room?.p2Ready]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // 両者リマッチ希望で p1 がリセット
   useEffect(() => {
     if (!room || !roomCode || room.status !== "finished") return;
     if (!room.p1WantsRematch || !room.p2WantsRematch) return;
     if (myRole !== "p1") return;
     update(ref(db, `rooms/${roomCode}`), {
-      status: "playing",
+      status: "ready",
       rounds: generateRounds(),
       currentRound: 0,
       "p1/score": 0,
@@ -260,6 +276,8 @@ export default function BattlePage() {
       "p2/answeredAt": null,
       p1WantsRematch: false,
       p2WantsRematch: false,
+      p1Ready: false,
+      p2Ready: false,
     });
   }, [room?.p1WantsRematch, room?.p2WantsRematch]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -294,7 +312,9 @@ export default function BattlePage() {
       "p2/score": 0,
       "p2/answeredIndex": null,
       "p2/answeredAt": null,
-      status: "playing",
+      status: "ready",
+      p1Ready: false,
+      p2Ready: false,
     });
     setRoomCode(code);
     setMyRole("p2");
@@ -441,6 +461,51 @@ export default function BattlePage() {
           <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" />
           <span>相手の参加を待っています...</span>
         </div>
+      </div>
+    );
+  }
+
+  // ─── 準備OK ───
+  if (room.status === "ready") {
+    const myReady = myRole === "p1" ? room.p1Ready : room.p2Ready;
+    const oppReady = myRole === "p1" ? room.p2Ready : room.p1Ready;
+    function handleReady() {
+      // 準備OK時に音声合成をウォームアップ
+      window.speechSynthesis.cancel();
+      const warmup = new SpeechSynthesisUtterance("");
+      warmup.lang = "ja-JP";
+      window.speechSynthesis.speak(warmup);
+      update(ref(db, `rooms/${roomCode!}`), { [`${myRole}Ready`]: true });
+    }
+    return (
+      <div className="max-w-sm mx-auto pt-8 text-center space-y-6">
+        <h2 className="text-2xl font-bold text-purple-900">対戦準備</h2>
+        <div className="bg-white border-2 border-purple-200 rounded-2xl p-6 space-y-4">
+          <div className="flex justify-around">
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-sm text-stone-500">{room.p1.name || "P1"}</p>
+              <span className="text-3xl">{room.p1Ready ? "✅" : "⏳"}</span>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-sm text-stone-500">{room.p2?.name || "P2"}</p>
+              <span className="text-3xl">{room.p2Ready ? "✅" : "⏳"}</span>
+            </div>
+          </div>
+          {oppReady && !myReady && (
+            <p className="text-sm text-purple-600 font-bold">相手が準備できました！</p>
+          )}
+          {myReady && !oppReady && (
+            <p className="text-sm text-stone-400">相手の準備を待っています...</p>
+          )}
+        </div>
+        {!myReady && (
+          <button
+            onClick={handleReady}
+            className="w-full bg-purple-700 text-white py-4 rounded-xl font-bold text-xl hover:bg-purple-600 transition-colors shadow-lg"
+          >
+            準備OK！
+          </button>
+        )}
       </div>
     );
   }
