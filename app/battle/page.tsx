@@ -525,11 +525,36 @@ export default function BattlePage() {
       setRoomCode(null);
       setMyRole(null);
     }
+
+    // ランダム対戦待機中は自動マッチング専用画面
+    if (room?.isRandom) {
+      return (
+        <div className="max-w-sm mx-auto pt-8 text-center space-y-6">
+          <h2 className="text-xl font-bold text-purple-900">対戦相手を探しています...</h2>
+          <div className="flex justify-center gap-1.5 py-6">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="w-3 h-3 bg-purple-400 rounded-full animate-bounce"
+                style={{ animationDelay: `${i * 0.15}s` }}
+              />
+            ))}
+          </div>
+          <p className="text-stone-400 text-sm">相手が見つかり次第、自動的に対戦が始まります</p>
+          <button
+            onClick={cancelWaiting}
+            className="w-full py-3 rounded-xl font-bold text-base border-2 border-stone-300 text-stone-500 hover:bg-stone-50 transition-colors"
+          >
+            キャンセル
+          </button>
+        </div>
+      );
+    }
+
+    // 友達対戦待機中はコード・URL・共有ボタンを表示
     return (
       <div className="max-w-sm mx-auto pt-8 text-center space-y-6">
-        <h2 className="text-xl font-bold text-purple-900">
-          {room?.isRandom ? "対戦相手を探しています..." : "友達を待っています"}
-        </h2>
+        <h2 className="text-xl font-bold text-purple-900">友達を待っています</h2>
         <div className="bg-white border-2 border-purple-200 rounded-2xl p-6 space-y-2">
           <p className="text-stone-400 text-sm">ルームコード</p>
           <p className="text-5xl font-bold text-purple-700 font-mono tracking-widest">{roomCode}</p>
